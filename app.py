@@ -16,8 +16,6 @@ from core.vision import analyze_image
 from core.auth import is_authorized
 from core.session_handler import init_db, save_message, get_session_messages, delete_session
 
-# Import Blueprints
-from routes.session_routes import session_routes
 
 # Initialize the Flask app
 app = Flask(__name__)
@@ -29,7 +27,7 @@ init_db()
 
 # Register Blueprints
 app.register_blueprint(auth_bp, url_prefix="/api/auth")
-app.register_blueprint(session_routes, url_prefix="/api/session")
+app.register_blueprint(session_bp, url_prefix="/api/session")
 app.register_blueprint(chat_multimodal_bp)
 app.register_blueprint(chat_bp)
 app.register_blueprint(session_bp)

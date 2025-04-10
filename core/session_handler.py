@@ -42,10 +42,10 @@ def get_sessions_for_user(user_id):
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT id, name, created_at
+        SELECT id, name, timestamp
         FROM sessions
         WHERE user_id = ?
-        ORDER BY created_at DESC
+        ORDER BY timestamp DESC
     """, (user_id,))
 
     sessions = cursor.fetchall()
@@ -71,7 +71,7 @@ def get_messages_for_session(session_id):
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT sender, message, timestamp
+        SELECT sender, content, timestamp
         FROM messages
         WHERE session_id = ?
         ORDER BY timestamp ASC
@@ -156,3 +156,95 @@ def get_session_messages(session_id):
         }
         for row in messages
     ]
+
+
+import sqlite3
+
+DB_PATH = "data/database.sqlite"
+
+def get_db_connection():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+# Create a new chat session
+def create_session(user_id, name="Untitled Session"):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO sessions (user_id, name)
+        VALUES (?, ?)
+    """, (user_id, name))
+
+    conn.commit()
+    session_id = cursor.lastrowid
+    conn.close()
+    return session_id
+
+# Delete a session and its messages
+def delete_session(session_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("DELETE FROM messages WHERE session_id = ?", (session_id,))
+    cursor.execute("DELETE FROM sessions WHERE id = ?", (session_id,))
+
+    conn.commit()
+    conn.close()
+    return True
+
+# Get all sessions for a user
+def get_sessions_for_user(user_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT id, name, timestamp
+        FROM sessions
+        WHERE user_id = ?
+        ORDER BY timestamp DESC
+    """, (user_id,))
+
+    sessions = cursor.fetchall()
+    conn.close()
+    return [dict(row) for row in sessions]
+
+# Save a message
+def save_message(session_id, sender, content):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO messages (session_id, sender, content)
+        VALUES (?, ?, ?)
+    """, (session_id, sender, content))
+
+    conn.commit()
+    conn.close()
+
+# Retrieve all messages for a session
+def get_session_messages(session_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT sender, content, timestamp
+        FROM messages
+        WHERE session_id = ?
+        ORDER BY timestamp ASC
+    """, (session_id,))
+
+    messages = cursor.fetchall()
+    conn.close()
+
+    return [dict(row) for row in messages]
+
+# Get all sessions (admin/debug)
+def get_all_sessions():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM sessions ORDER BY timestamp DESC')
+    sessions = cursor.fetchall()
+    conn.close()
+    return [dict(row) for row in sessions]

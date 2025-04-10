@@ -2,45 +2,42 @@ import os
 import jwt
 import hashlib
 import datetime
-from flask import request 
 from flask import current_app
-from functools import wraps
 from dotenv import load_dotenv
 
 load_dotenv()  # Load variables from .env into environment
 
 AUTHORIZED_API_KEY = os.getenv("API_KEY")
 SECRET_KEY = os.getenv('SECRET_KEY', 'supersecretkey')
-SECRET_KEY = current_app.config.get('SECRET_KEY', 'supersecretkey')
 
+with current_app.app_context():
+    SECRET_KEY = current_app.config.get('SECRET_KEY', 'supersecretkey')
 
 def is_authorized(token):
-    try:
-        # Remove "Bearer " prefix
-        token = token.split(" ")[1] if token.startswith("Bearer ") else token
-        
-        # Decode the JWT token
-        decoded_token = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-        
-        # Optionally, you can verify that the token has the correct claims (e.g., username, expiration)
-        if decoded_token.get("username"):
-            return True
-    except Exception as e:
-        print(f"Error: {e}")
+    if not token:
+        print("Authorization failed: No token provided.")
         return False
-    return False
+
+    if not token.startswith("Bearer "):
+        print("Authorization failed: Token format incorrect.")
+        return False
+
+    actual_token = token.split(" ")[1]
+    return actual_token == "expected_token_value"
 
 
 def verify_user(username, password):
-    # check user from DB or dummy data
+    # Placeholder function; parameters are currently unused
+    _ = username
+    _ = password
     return True  # or real logic
-
-def hash_password(password):
     # return hashed password string
     return password  # or real hashing
 
 def check_credentials(username, password):
-    # Your logic here
+    # Placeholder function; parameters are currently unused
+    _ = username
+    _ = password
     pass
 
 def hash_password(password):
@@ -60,7 +57,7 @@ def login_user(username, password):
         return True, "Login successful"
     return False, "Invalid credentials"
 
-
+    expiration_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=1)
 def generate_token(username):
     expiration_time = datetime.datetime.utcnow() + datetime.timedelta(hours=1)
     payload = {
