@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.sqlite
+*.log
+
+# Environment
+.env
+
+# Uploads
+uploads/
+
+# VSCode or IDE
+.vscode/
+.idea/
+
+# OS generated
+.DS_Store
+Thumbs.db
+
+# Docker
+*.pid
+
+# Misc
+*.bak

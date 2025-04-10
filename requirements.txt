@@ -1,0 +1,24 @@
+# Core Flask server
+flask==2.3.2
+flask-cors==3.0.10
+python-dotenv==1.0.1
+
+# For image processing (vision models, uploads)
+Pillow==10.2.0
+opencv-python==4.9.0.80
+torch==2.2.0          # Required for vision + LLMs
+transformers==4.38.0  # LLaMA, CLIP, etc.
+sentencepiece==0.1.99 # Tokenizer support for some models
+
+# Auth + Security
+flask-jwt-extended==4.6.0
+bcrypt==4.1.2
+
+# Optional DB choices
+tinydb==4.8.0         # Lightweight DB (alternative to SQLite)
+sqlalchemy==2.0.27    # ORM for SQLite or other RDBMS
+flask-sqlalchemy==3.1.1
+
+# Utils
+requests==2.31.0
+uuid==1.30
