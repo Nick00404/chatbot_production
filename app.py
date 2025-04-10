@@ -2,6 +2,8 @@ import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
+from routes.chat_multimodal_routes import chat_multimodal_bp
+from routes import auth_bp, chat_bp
 
 # Load environment variables
 load_dotenv()
@@ -29,6 +31,10 @@ init_db()
 app.register_blueprint(auth_routes, url_prefix="/api/auth")
 app.register_blueprint(chat_routes, url_prefix="/api/chat")
 app.register_blueprint(session_routes, url_prefix="/api/session")
+app.register_blueprint(chat_multimodal_bp)
+app.register_blueprint(auth_bp)
+app.register_blueprint(chat_bp)
+app.register_blueprint(session_bp)
 
 # Custom endpoints
 @app.route("/api/chat", methods=["POST"])

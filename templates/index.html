@@ -43,7 +43,22 @@
       <p id="visionOutput"></p>
     </div>
   </div>
-
+  
+  <div class="chat-section">
+    <!-- Multimodal Chat Input -->
+    <div class="chat-input multimodal-input">
+      <label for="image-input" class="upload-label">📁 Upload Image</label>
+      <input type="file" id="image-input" accept="image/*" />
+  
+      <input type="text" id="vision-prompt" placeholder="Ask about the image..." />
+  
+      <button id="send-vision-btn" class="send-btn">🧠 Ask</button>
+    </div>
+  
+    <!-- Chat Box Output -->
+    <div id="chat-box" class="chat-box"></div>
+  </div>
+  
   <script src="scripts/chat.js"></script>
   <script src="scripts/vision.js"></script>
   <script src="scripts/session.js"></script>

@@ -1,41 +1,64 @@
-from flask import Blueprint, request, jsonify
-from core.llm import generate_llm_response
-from core.vision import analyze_image
-from core.session_handler import save_message, get_session_messages
+# routes/chat_routes.py
 
-chat_bp = Blueprint('chat', __name__)
+from flask import Blueprint, request, session, jsonify
+from core.llm import get_llm_response
+from core.vision import generate_caption
+from core.session_handler import save_message_to_session
+import os
+import uuid
 
-@chat_bp.route('/chat', methods=['POST'])
-def chat():
-    data = request.json
-    session_id = data.get("session_id")
-    message = data.get("message")
+chat_bp = Blueprint("chat", __name__)
 
-    if not message:
-        return jsonify({"error": "Message is required"}), 400
+UPLOAD_FOLDER = "uploads"
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-    # Save user message
-    save_message(session_id, "user", message)
+@chat_bp.route("/chat/text", methods=["POST"])
+def chat_text():
+    data = request.get_json()
+    user_input = data.get("message", "")
+    session_id = session.get("session_id")
 
-    # Get response from LLM
-    response = generate_llm_response(message)
-    save_message(session_id, "bot", response)
+    if not user_input:
+        return jsonify({"error": "Empty message"}), 400
 
-    return jsonify({"response": response}), 200
+    # LLM response
+    llm_reply = get_llm_response(user_input)
 
+    # Save to session
+    if session_id:
+        save_message_to_session(session_id, "user", user_input)
+        save_message_to_session(session_id, "bot", llm_reply)
 
-@chat_bp.route('/vision', methods=['POST'])
-def vision():
-    if 'image' not in request.files:
-        return jsonify({"error": "No image file provided"}), 400
-    
-    image_file = request.files['image']
-    result = analyze_image(image_file)
-
-    return jsonify({"result": result}), 200
+    return jsonify({"response": llm_reply})
 
 
-@chat_bp.route('/history/<session_id>', methods=['GET'])
-def chat_history(session_id):
-    messages = get_session_messages(session_id)
-    return jsonify({"messages": messages}), 200
+@chat_bp.route("/chat/multimodal", methods=["POST"])
+def chat_multimodal():
+    image = request.files.get("image")
+    prompt = request.form.get("prompt", "")
+    session_id = session.get("session_id")
+
+    if not image or not prompt:
+        return jsonify({"error": "Missing image or prompt"}), 400
+
+    # Save image
+    filename = f"{uuid.uuid4().hex}_{image.filename}"
+    image_path = os.path.join(UPLOAD_FOLDER, filename)
+    image.save(image_path)
+
+    # Vision captioning
+    caption = generate_caption(image_path)
+
+    # Combine vision + user prompt
+    multimodal_prompt = f"Image Description: {caption}\nUser Prompt: {prompt}"
+    llm_reply = get_llm_response(multimodal_prompt)
+
+    # Save to session
+    if session_id:
+        save_message_to_session(session_id, "user", prompt)
+        save_message_to_session(session_id, "bot", llm_reply)
+
+    return jsonify({
+        "caption": caption,
+        "response": llm_reply
+    })
