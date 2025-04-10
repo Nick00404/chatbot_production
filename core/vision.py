@@ -3,6 +3,7 @@
 import os
 import requests
 from dotenv import load_dotenv
+from models.vision_model import run_image_captioning
 
 
 load_dotenv()
@@ -40,3 +41,7 @@ class VisionModel:
             return caption
         except Exception:
             return "Failed to parse caption from response."
+
+    
+    def generate_caption(image_path):
+        return run_image_captioning(image_path)

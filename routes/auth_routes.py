@@ -1,6 +1,6 @@
 # routes/auth_routes.py
 from flask import Blueprint, request, jsonify, session
-from core import auth
+from core import verify_user, hash_password, auth
 
 auth_bp = Blueprint("auth", __name__)
 

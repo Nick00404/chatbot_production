@@ -1,10 +1,11 @@
-from flask import Blueprint, request, jsonify
-from core.session_handler import (
-    create_session,
+from flask import Blueprint, request, jsonify, session
+from core import (
     get_all_sessions,
+    create_session,
     delete_session,
+    get_sessions_for_user,
 )
-
+session_bp = Blueprint("sessions", __name__)
 session_routes = Blueprint("session_routes", __name__)
 
 # Create new session

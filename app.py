@@ -3,7 +3,9 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
 from routes.chat_multimodal_routes import chat_multimodal_bp
-from routes import auth_bp, chat_bp
+from routes.auth_routes import auth_bp
+from routes.chat_routes import chat_bp
+from routes.session_routes import session_bp
 
 # Load environment variables
 load_dotenv()

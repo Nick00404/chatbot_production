@@ -1,11 +1,9 @@
 # routes/chat_routes.py
-
-from flask import Blueprint, request, session, jsonify
-from core.llm import get_llm_response
-from core.vision import generate_caption
-from core.session_handler import save_message_to_session
 import os
 import uuid
+from flask import Blueprint, request, jsonify, session
+from core import get_llm_response, generate_caption, save_message_to_session
+
 
 chat_bp = Blueprint("chat", __name__)
 

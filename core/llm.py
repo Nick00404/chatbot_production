@@ -17,3 +17,7 @@ def query_llm(prompt, session_id="default"):
         return response.json().get("response", "⚠️ No response from model.")
     except Exception as e:
         return f"❌ LLM Error: {e}"
+
+def get_llm_response(prompt):
+    # Your logic using LLaMA API
+    pass

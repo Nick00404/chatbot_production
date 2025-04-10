@@ -1,5 +1,6 @@
 # backend/auth.py
 import os
+import hashlib
 from dotenv import load_dotenv
 
 load_dotenv()  # Load variables from .env into environment
@@ -18,3 +19,10 @@ def verify_user(username, password):
 def hash_password(password):
     # return hashed password string
     return password  # or real hashing
+
+def check_credentials(username, password):
+    # Your logic here
+    pass
+
+def hash_password(password):
+    return hashlib.sha256(password.encode()).hexdigest()
