@@ -248,3 +248,21 @@ def get_all_sessions():
     sessions = cursor.fetchall()
     conn.close()
     return [dict(row) for row in sessions]
+
+def get_active_session_for_user(user_id):
+    """Get the most recent (active) session for a user, if one exists."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT id
+        FROM sessions
+        WHERE user_id = ?
+        ORDER BY timestamp DESC
+        LIMIT 1
+    """, (user_id,))
+
+    row = cursor.fetchone()
+    conn.close()
+
+    return row["id"] if row else None

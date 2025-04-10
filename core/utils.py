@@ -1,7 +1,7 @@
 import os
 import json
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 
 def load_json(file_path: str) -> Dict[str, Any]:
@@ -18,28 +18,35 @@ def load_json(file_path: str) -> Dict[str, Any]:
         raise RuntimeError(f"[load_json] Unexpected error reading {file_path}: {e}")
 
 
-def save_json(file_path: str, data: Dict[str, Any], overwrite: bool = True) -> None:
+def save_json(file_path: str, data: Dict[str, Any], overwrite: bool = True, verbose: bool = False) -> None:
     """Save data to a JSON file. Optionally prevent overwriting existing files."""
     if not overwrite and os.path.exists(file_path):
-        raise FileExistsError(f"[save_json] File already exists and overwrite=False: {file_path}")
+        raise FileExistsError(f"[save_json] File exists and overwrite=False: {file_path}")
 
     try:
         with open(file_path, 'w', encoding='utf-8') as file:
             json.dump(data, file, indent=4)
+        if verbose:
+            print(f"[save_json] Saved JSON to {file_path}")
     except TypeError as e:
-        raise ValueError(f"[save_json] Data is not serializable: {e}")
+        raise ValueError(f"[save_json] Data is not JSON serializable: {e}")
     except Exception as e:
         raise RuntimeError(f"[save_json] Failed to write to {file_path}: {e}")
 
 
-def get_timestamp() -> str:
+def get_timestamp(fmt: str = '%Y-%m-%d %H:%M:%S') -> str:
     """Return the current timestamp formatted as a string."""
-    return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    try:
+        return datetime.now().strftime(fmt)
+    except Exception as e:
+        raise ValueError(f"[get_timestamp] Invalid datetime format: {e}")
 
 
-def ensure_dir(directory: str) -> None:
+def ensure_dir(directory: str, verbose: bool = False) -> None:
     """Ensure a directory exists; create it if it doesn't."""
     try:
         os.makedirs(directory, exist_ok=True)
+        if verbose:
+            print(f"[ensure_dir] Ensured directory: {directory}")
     except Exception as e:
         raise RuntimeError(f"[ensure_dir] Failed to create directory {directory}: {e}")
