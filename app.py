@@ -17,8 +17,6 @@ from core.auth import is_authorized
 from core.session_handler import init_db, save_message, get_session_messages, delete_session
 
 # Import Blueprints
-from routes.auth_routes import auth_routes
-from routes.chat_routes import chat_routes
 from routes.session_routes import session_routes
 
 # Initialize the Flask app
@@ -30,11 +28,9 @@ app.secret_key = os.getenv("SECRET_KEY", "supersecretkey")
 init_db()
 
 # Register Blueprints
-app.register_blueprint(auth_routes, url_prefix="/api/auth")
-app.register_blueprint(chat_routes, url_prefix="/api/chat")
+app.register_blueprint(auth_bp, url_prefix="/api/auth")
 app.register_blueprint(session_routes, url_prefix="/api/session")
 app.register_blueprint(chat_multimodal_bp)
-app.register_blueprint(auth_bp)
 app.register_blueprint(chat_bp)
 app.register_blueprint(session_bp)
 

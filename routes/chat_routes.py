@@ -1,15 +1,33 @@
-# routes/chat_routes.py
 import os
 import uuid
 from flask import Blueprint, request, jsonify, session
-from core import get_llm_response, generate_caption, save_message_to_session
-
+from core import query_llm, generate_caption, save_message_to_session
+from core.auth import verify_token  # Assuming verify_token is in core.auth
 
 chat_bp = Blueprint("chat", __name__)
 
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+# Chat route with token authorization
+@chat_bp.route("/api/chat", methods=["POST"])
+def chat():
+    token = request.headers.get("Authorization")
+    if not token or not token.startswith("Bearer "):
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    token = token.split(" ")[1]  # Extract the token part after "Bearer"
+    payload = verify_token(token)  # Assuming this is a function in core.auth
+    
+    if not payload:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    # Token is valid, proceed with handling the chat request
+    username = payload['username']
+    # Further logic here...
+    return jsonify({"response": f"Hello, {username}!"})
+
+# Chat text route
 @chat_bp.route("/chat/text", methods=["POST"])
 def chat_text():
     data = request.get_json()
@@ -20,7 +38,7 @@ def chat_text():
         return jsonify({"error": "Empty message"}), 400
 
     # LLM response
-    llm_reply = get_llm_response(user_input)
+    llm_reply = query_llm(user_input)
 
     # Save to session
     if session_id:
@@ -29,7 +47,7 @@ def chat_text():
 
     return jsonify({"response": llm_reply})
 
-
+# Chat multimodal route (image + prompt)
 @chat_bp.route("/chat/multimodal", methods=["POST"])
 def chat_multimodal():
     image = request.files.get("image")
@@ -49,7 +67,7 @@ def chat_multimodal():
 
     # Combine vision + user prompt
     multimodal_prompt = f"Image Description: {caption}\nUser Prompt: {prompt}"
-    llm_reply = get_llm_response(multimodal_prompt)
+    llm_reply = query_llm(multimodal_prompt)
 
     # Save to session
     if session_id:

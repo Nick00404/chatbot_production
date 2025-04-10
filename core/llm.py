@@ -1,23 +1,39 @@
-# backend/llm.py
-import requests
+# core/llm.py
+
 import os
+import requests
+from dotenv import load_dotenv
 
-LLAMA_API_URL = os.getenv("LLAMA_API_URL") or "http://localhost:11434/api/generate"
+# Load environment variables
+load_dotenv()
 
-def query_llm(prompt, session_id="default"):
-    payload = {
-        "model": "llama3",  
-        "prompt": prompt,
-        "stream": False,
-        "session_id": session_id
-    }
+# Hugging Face API config
+HUGGINGFACE_API_KEY = os.getenv("HF_API_TOKEN")
+MODEL = os.getenv("HUGGINGFACE_MODEL", "google/flan-t5-large")
+
+API_URL = f"https://api-inference.huggingface.co/models/{MODEL}"
+HEADERS = {
+    "Authorization": f"Bearer {HUGGINGFACE_API_KEY}",
+    "Content-Type": "application/json"
+}
+
+def query_llm(prompt: str, session_id: str = None) -> str:
+    """Sends a prompt to Hugging Face model and returns the generated text."""
+    payload = {"inputs": prompt}
+
     try:
-        response = requests.post(LLAMA_API_URL, json=payload)
+        response = requests.post(API_URL, headers=HEADERS, json=payload)
         response.raise_for_status()
-        return response.json().get("response", "⚠️ No response from model.")
-    except Exception as e:
-        return f"❌ LLM Error: {e}"
+        output = response.json()
 
-def get_llm_response(prompt):
-    # Your logic using LLaMA API
-    pass
+        # Handle different output formats
+        if isinstance(output, list) and "generated_text" in output[0]:
+            return output[0]["generated_text"]
+        elif isinstance(output, dict) and "generated_text" in output:
+            return output["generated_text"]
+        else:
+            return str(output)
+    except requests.exceptions.RequestException as e:
+        return f"❌ HuggingFace API Error: {str(e)}"
+    except Exception as e:
+        return f"❌ Unexpected Error: {str(e)}"
