@@ -1,7 +1,7 @@
 # core/session_handler.py
 
 import sqlite3
-
+import os
 
 DB_PATH = "data/database.sqlite"
 
@@ -37,20 +37,45 @@ def delete_session(session_id):
     conn.close()
 
 # List all sessions for a specific user
-def get_sessions_for_user(user_id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT id, name, timestamp
-        FROM sessions
-        WHERE user_id = ?
-        ORDER BY timestamp DESC
-    """, (user_id,))
-
-    sessions = cursor.fetchall()
-    conn.close()
-    return [dict(row) for row in sessions]
+def get_sessions_for_user(user_id: int) -> list[dict]:
+    """
+    Retrieve all chat sessions for a specific user, ordered by most recent first.
+    
+    Args:
+        user_id: The ID of the user whose sessions to retrieve
+        
+    Returns:
+        List of session dictionaries with keys: id, name, timestamp
+        
+    Raises:
+        ValueError: If user_id is not a positive integer
+    """
+    # Validate input
+    if not isinstance(user_id, int) or user_id < 1:
+        raise ValueError("user_id must be a positive integer")
+    
+    sessions = []
+    
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT id, name, strftime('%Y-%m-%d %H:%M:%S', timestamp) AS timestamp
+                FROM sessions
+                WHERE user_id = ?
+                ORDER BY timestamp DESC
+            """, (user_id,))
+            
+            sessions = [dict(row) for row in cursor.fetchall()]
+            
+    except sqlite3.Error as e:
+        print(f"Database error in get_sessions_for_user: {str(e)}")
+        raise
+    except Exception as e:
+        print(f"Unexpected error in get_sessions_for_user: {str(e)}")
+        raise
+        
+    return sessions
 
 # Save a message in a session
 def save_message(session_id, sender, message):
@@ -94,11 +119,16 @@ def get_all_sessions():
 save_message_to_session = save_message
 
 
-def init_db():
-    """Initialize the database with required tables if they don't exist."""
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
+
+# core/session_handler.py (FIXED)
+def init_db(db_path: str = None):
+    """Initialize the database with required tables"""
+    db_path = db_path or "data/database.sqlite"  # Use default if not provided
+    os.makedirs(os.path.dirname(db_path), exist_ok=True)
     
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+
     # Users table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
@@ -194,21 +224,6 @@ def delete_session(session_id):
     conn.close()
     return True
 
-# Get all sessions for a user
-def get_sessions_for_user(user_id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT id, name, timestamp
-        FROM sessions
-        WHERE user_id = ?
-        ORDER BY timestamp DESC
-    """, (user_id,))
-
-    sessions = cursor.fetchall()
-    conn.close()
-    return [dict(row) for row in sessions]
 
 # Save a message
 def save_message(session_id, sender, content):

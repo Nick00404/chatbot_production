@@ -1,4 +1,7 @@
+# app.py
+
 import os
+from core.session_handler import init_db
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
@@ -15,7 +18,7 @@ from routes.session_routes import session_bp
 # Import core utilities
 from core.llm import query_llm
 from core.vision import analyze_image
-from core.auth import is_authorized
+from core.auth import is_authorized, verify_token
 from core.session_handler import init_db, save_message, get_session_messages, delete_session
 
 # Initialize Flask app
@@ -29,8 +32,8 @@ init_db()
 # Register Blueprints
 app.register_blueprint(auth_bp, url_prefix="/api/auth")
 app.register_blueprint(session_bp, url_prefix="/api/session")
-app.register_blueprint(chat_multimodal_bp)
-app.register_blueprint(chat_bp)
+app.register_blueprint(chat_multimodal_bp, url_prefix="/api/chat")
+app.register_blueprint(chat_bp, url_prefix="/api/chat")
 
 # ------------------------------
 # Routes
@@ -108,3 +111,11 @@ if __name__ == "__main__":
     port = int(os.getenv("PORT", 5000))
     debug_mode = os.getenv("DEBUG", "true").lower() == "true"
     app.run(host="0.0.0.0", port=port, debug=debug_mode)
+
+@app.before_request
+def verify_token_middleware():
+    if request.endpoint in ['auth.login', 'auth.register']:
+        return
+    token = request.headers.get("Authorization", "").replace("Bearer ", "")
+    if not verify_token(token):
+        return jsonify({"error": "Unauthorized"}), 401

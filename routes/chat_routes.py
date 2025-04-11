@@ -1,3 +1,5 @@
+# routes/chat_routes.py
+
 import os
 import uuid
 from flask import Blueprint, request, jsonify, session
@@ -27,7 +29,7 @@ def extract_user_from_token():
 # -------------------------------
 # Chat (Authenticated)
 # -------------------------------
-@chat_bp.route("/api/chat", methods=["POST"])
+@chat_bp.route("/", methods=["POST"])
 def chat():
     payload = extract_user_from_token()
     if not payload:
@@ -54,7 +56,7 @@ def chat():
 # -------------------------------
 # Chat Text (No Auth Required)
 # -------------------------------
-@chat_bp.route("/api/chat/text", methods=["POST"])
+@chat_bp.route("/text", methods=["POST"])
 def chat_text():
     try:
         data = request.get_json()
@@ -83,7 +85,7 @@ def chat_text():
 # -------------------------------
 # Chat Multimodal (Image + Prompt)
 # -------------------------------
-@chat_bp.route("/api/chat/multimodal", methods=["POST"])
+@chat_bp.route("/multimodal", methods=["POST"])
 def chat_multimodal():
     image = request.files.get("image")
     prompt = request.form.get("prompt", "").strip()

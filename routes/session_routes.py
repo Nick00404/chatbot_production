@@ -1,3 +1,5 @@
+# routes/session_routes.py
+
 from flask import Blueprint, request, jsonify
 from core.session_handler import (
     get_all_sessions,
@@ -7,23 +9,27 @@ from core.session_handler import (
     get_session_messages,
 )
 from core.auth import verify_token
+import sqlite3
 
-session_bp = Blueprint("sessions", __name__)
+session_bp = Blueprint("sessions", __name__, url_prefix="/api/session")
 
-# Helper: get user_id from JWT
+
+# 🔐 Helper: Extract user ID (username) from token
 def get_user_id_from_token():
-    token = request.headers.get("Authorization")
-    if not token or not token.startswith("Bearer "):
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
         return None
-    payload = verify_token(token.split(" ")[1])
+    token = auth_header.split(" ")[1]
+    payload = verify_token(token)
     return payload.get("username") if payload else None
 
 
-# Create a new session
-@session_bp.route("/api/session", methods=["POST"])
+# ✅ POST /api/session/ — Create a new chat session
+@session_bp.route("/", methods=["POST"])
 def new_session():
     data = request.get_json()
     session_name = data.get("name")
+
     if not session_name:
         return jsonify({"error": "Session name is required"}), 400
 
@@ -31,36 +37,51 @@ def new_session():
     if not user_id:
         return jsonify({"error": "Unauthorized"}), 401
 
-    session_id = create_session(user_id, session_name)
-    return jsonify({"message": "Session created", "id": session_id}), 201
+    try:
+        session_id = create_session(user_id, session_name)
+        return jsonify({"message": "Session created", "id": session_id}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
-# List all sessions for user
-@session_bp.route("/api/sessions", methods=["GET"])
+# routes/session_routes.py
+@session_bp.route('/sessions', methods=['GET'])
 def list_sessions():
+    user_id = get_user_id_from_token()
+    try:
+        sessions = get_sessions_for_user(user_id)
+        return jsonify(sessions), 200
+    except (ValueError, sqlite3.Error) as e:
+        return jsonify({"error": str(e)}), 400
+
+
+# ✅ DELETE /api/session/<id> — Delete a session
+@session_bp.route("/<int:session_id>", methods=["DELETE"])
+def remove_session(session_id):
     user_id = get_user_id_from_token()
     if not user_id:
         return jsonify({"error": "Unauthorized"}), 401
 
-    sessions = get_sessions_for_user(user_id)
-    return jsonify(sessions), 200
+    try:
+        success = delete_session(session_id)
+        if not success:
+            return jsonify({"error": "Session not found"}), 404
+        return jsonify({"message": "Session deleted"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
-# Delete a session
-@session_bp.route("/api/session/<int:session_id>", methods=["DELETE"])
-def remove_session(session_id):
-    success = delete_session(session_id)
-    if not success:
-        return jsonify({"error": "Session not found"}), 404
-    return jsonify({"message": "Session deleted"}), 200
-
-
-# Get messages for a specific session
-@session_bp.route("/api/session/<int:session_id>/messages", methods=["GET"])
+# ✅ GET /api/session/<id>/messages — Get all messages in a session
+@session_bp.route("/<int:session_id>/messages", methods=["GET"])
 def get_messages(session_id):
     user_id = get_user_id_from_token()
     if not user_id:
         return jsonify({"error": "Unauthorized"}), 401
 
-    messages = get_session_messages(session_id)
-    return jsonify({"messages": messages}), 200
+    try:
+        messages = get_session_messages(session_id)
+        if messages is None:
+            return jsonify({"error": "Session not found"}), 404
+        return jsonify({"messages": messages}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

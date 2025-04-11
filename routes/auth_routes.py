@@ -4,6 +4,7 @@ import os
 from flask import Blueprint, request, jsonify, session
 from core import auth
 from core.auth import verify_token, create_token
+from core.auth import register_user
 from core.session_handler import create_session
 
 auth_bp = Blueprint("auth", __name__)
@@ -11,18 +12,22 @@ auth_bp = Blueprint("auth", __name__)
 # -----------------------
 # Register Route
 # -----------------------
+
 @auth_bp.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
-    username = data.get("username")
-    password = data.get("password")
+    
+    # Validate presence of username and password
+    if not data or 'username' not in data or 'password' not in data:
+        return jsonify({"message": "Username and password required"}), 400
 
-    if not username or not password:
-        return jsonify({"success": False, "message": "Username and password required"}), 400
+    # Attempt to register the user
+    success, message = register_user(data['username'], data['password'])
 
-    success, message = auth.register_user(username, password)
-    status = 201 if success else 400
-    return jsonify({"success": success, "message": message}), status
+    # Return appropriate response based on success
+    status_code = 201 if success else 400
+    return jsonify({"message": message}), status_code
+
 
 
 # -----------------------
@@ -53,5 +58,5 @@ def login():
 
 # ✅ NOTE: Move this to chat_routes.py — leaving here breaks separation of concerns
 # Example:
-# @chat_bp.route("/api/chat", methods=["POST"])
-# def chat(): ...
+# @chat_bp.route("/", methods=["POST"])
+# # def chat(): ...

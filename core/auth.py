@@ -1,8 +1,11 @@
+#core/auth.py
+
 import os
 import jwt
 import hashlib
 import datetime
 import sqlite3
+from datetime import datetime, timedelta, timezone 
 from flask import current_app
 from dotenv import load_dotenv
 
@@ -73,7 +76,7 @@ def login_user(username, password):
 def create_token(username):
     """Create a JWT token for a user."""
     secret_key = get_secret_key()
-    expiration_time = datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+    expiration_time = datetime.now(timezone.utc) + timedelta(hours=1)    
     payload = {
         'username': username,
         'exp': expiration_time
