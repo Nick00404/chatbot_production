@@ -1,6 +1,19 @@
-# 🤖 Hybrid AI Chatbot - LLM + Vision + Auth + Session
+# 🤖 Hybrid AI Chatbot - Multimodal LLM + Vision + Auth + Sessions
 
-A production-ready AI chatbot with a modular Flask backend, modern frontend, user authentication, image understanding (CLIP/LLaVA-ready), persistent chat sessions, and Dockerized deployment.
+A production-ready AI chatbot supporting **text + image inputs**, **JWT authentication**, **session tracking**, and **Dockerized deployment**. Built on a **modular Flask architecture**, ready for both experimentation and production environments.
+
+---
+
+## ✅ Features
+
+- 💬 **Text Chat**: LLM-powered responses via OpenAI / Hugging Face
+- 🖼️ **Multimodal Support**: Image + text input processing (CLIP/LLaVA-ready)
+- 🔐 **JWT Authentication**: Secure token-based login
+- 🧠 **Session Management**: Persistent, user-specific conversation logs
+- ⚙️ **Modular Codebase**: Separated logic for auth, LLM, vision, and routes
+- 🧪 **Testing Suite**: Modular unit tests
+- 🐳 **Dockerized**: Gunicorn + Nginx setup for production deployment
+- 🖥️ **Frontend**: HTML + CSS + JS interface with image upload support
 
 ---
 
@@ -8,112 +21,131 @@ A production-ready AI chatbot with a modular Flask backend, modern frontend, use
 
 ```
 chatbot_production/
-│
-├── app.py                   # Main Flask entry point
-├── .env                     # Environment variables
-├── .gitignore               # Git ignore file
-├── Dockerfile               # Docker build file
-├── docker-compose.yml       # Docker Compose configuration
-├── nginx.conf               # Nginx reverse proxy configuration
-├── gunicorn_config.py       # Gunicorn production configuration
+├── app.py                   # Flask entry point
+├── .env                     # Environment config
+├── Dockerfile               # Backend Docker container
+├── docker-compose.yml    	 # Add Redis service
+├── nginx.conf               # Reverse proxy config
 ├── requirements.txt         # Python dependencies
-├── README.md                # Project documentation
 │
-├── config/                  # Configuration modules
+├── config/                  # Config modules (e.g., gunicorn)
 │
-├── core/                    # Backend logic
-│   ├── auth.py              # Authentication handlers
-│   ├── llm.py               # LLM API interface
-│   ├── vision.py            # Vision model handler
-│   ├── session_handler.py   # Session management
-│   ├── utils.py             # Shared utilities
-│   └── __init__.py
+├── core/                    # Core logic
+│   ├── auth.py              # User auth
+│   ├── llm.py               # LLM handlers
+│   ├── vision.py            # Vision models (CLIP/LLaVA)
+│   ├── session_handler.py   # Session lifecycle
+│   └── utils.py             # Helpers
+│   ├── security.py       	 # Rate limiting
+│   ├── middleware.py     	 # Quotas
+│   └── plugins/          	 # Extensibility
 │
-├── data/
-│   └── database.sqlite      # SQLite database
-│
-├── logs/                    # Logging directory
-│
-├── models/                  # AI model files
-│   ├── llm_backend.py
-│   └── vision_model.py
-│
-├── routes/                  # Flask route modules
+├── routes/                  # API endpoints
 │   ├── auth_routes.py
 │   ├── chat_routes.py
-│   └── session_routes.py
+│   ├──	session_routes.py
+│   └── admin_routes.py		 # Metrics endpoints
 │
-├── static/
-│   ├── images/              # Static images
-│   ├── scripts/             # Frontend scripts
-│   │   ├── auth.js
-│   │   ├── chat.js
-│   │   ├── session.js
-│   │   ├── upload.js
-│   │   ├── utils.js
-│   │   └── vision.js
-│   └── styles/
-│       └── style.css        # CSS styles
+├── static/                  # Frontend assets
+│   ├── scripts/             # JS (auth, chat, vision, admin, etc.)
+│   └── styles/              # CSS stylesheets
 │
-├── templates/
-│   ├── index.html           # Chat UI
-│   └── login.html           # Login UI
+├── templates/               # HTML templates
+│   ├── index.html
+│   └── login.html
 │
-├── tests/                   # Test suite (to be implemented)
-└── uploads/                 # Uploaded images
+├── uploads/                 # Uploaded user images
+├── logs/                    # App logs
+├── models/                  # Model wrappers (LLM & Vision)
+├── data/
+│   ├── database.sqlite
+│   └── init_db.py           # DB init script
+└── tests/                   # Unit tests
 ```
 
 ---
 
-## ✅ Features
+## 🚀 Quick Start
 
-- LLM Chat (via API)
-- Image Upload
-- Session Tracking (SQLite)
-- User Login/Logout (Flask session)
-- Modular Frontend with JavaScript
-- Dockerized Deployment (Gunicorn + Nginx)
-- Environment Configuration (.env)
+### Prerequisites
 
----
+- Python 3.10+
+- Docker + Docker Compose
+- OpenAI or Hugging Face API Key
 
-## 🚀 Getting Started
-
-### 1. Install Requirements
+### Local Setup
 
 ```bash
+git clone https://github.com/yourusername/chatbot_production.git
+cd chatbot_production
 pip install -r requirements.txt
-```
----
-
-### 2. Add `.env`
-
-Create a `.env` file in the root directory:
-
-```
-SECRET_KEY=your_secret_key
-OPENAI_API_KEY=your_openai_api_key
-```
-
----
-
-### 3. Run Locally (Development)
-
-```bash
+python data/init_db.py
 python app.py
 ```
+
+### Create `.env`
+
+```ini
+SECRET_KEY=your_secret_key
+OPENAI_API_KEY=sk-xxx       # Optional
+HF_API_TOKEN=hf-xxx         # Optional
+HUGGINGFACE_MODEL=google/flan-t5-large
+PORT=5000
+DEBUG=false
+```
+
+---
+
+## 📡 API Documentation
+
+### Auth
+| Endpoint              | Method | Description         |
+|-----------------------|--------|---------------------|
+| `/api/auth/register`  | POST   | Register new user   |
+| `/api/auth/login`     | POST   | JWT-based login     |
+
+### Chat
+| Endpoint               | Method | Description             |
+|------------------------|--------|-------------------------|
+| `/api/chat`            | POST   | Text-based interaction  |
+| `/api/chat/multimodal` | POST   | Image + text inputs     |
+
+### Session
+| Endpoint                   | Method | Description              |
+|----------------------------|--------|--------------------------|
+| `/api/session/`            | POST   | Start new session        |
+| `/api/session/sessions`    | GET    | Get user sessions        |
+| `/api/session/<id>`        | DELETE | Delete session           |
+
+**Headers:**
+
+```
+Authorization: Bearer <JWT_TOKEN>
+```
+
+---
+
+## 🧪 Testing
+
+```bash
+python -m pytest tests/ -v --disable-warnings
+```
+
+Covers:
+- ✅ Registration/login
+- ✅ Chat & multimodal requests
+- ✅ Session creation & deletion
 
 ---
 
 ## 🐳 Docker Deployment
 
-### Build and Start
-
 ```bash
-docker-compose up --build
+docker-compose build
+docker-compose up -d
 ```
 
-The app will be available at [http://localhost](http://localhost).
+Open your browser at: `http://localhost:8000`
 
 ---
 
@@ -124,35 +156,41 @@ The app will be available at [http://localhost](http://localhost).
 | Vision Inference (CLIP/LLaVA)       | ⏳ WIP |
 | Image + Text Prompt Fusion          | ⏳ WIP |
 | Session Export (Markdown/JSON)      | 🔜     |
-| Usage Rate Limiting / API Tracking  | 🔜     |
-| Admin Dashboard / Stats             | 🔜     |
-| Switchable LLM Backend              | 🔜     |
-| Automated Test Suite                | 🔜     |
+| API Rate Limiting                   | 🔜     |
+| Admin Dashboard                     | 🔜     |
+| LLM Backend Switching               | 🔜     |
+| Full Test Coverage                  | 🔜     |
 
 ---
 
-## 📦 Tech Stack
+## 🛆 Tech Stack
 
-| Component     | Tool                         |
-|---------------|------------------------------|
-| Backend       | Flask                        |
-| Frontend      | HTML + CSS + Vanilla JS      |
-| Auth          | Flask session (JWT planned)  |
-| LLM API       | LLaMA / OpenAI               |
-| Vision        | CLIP / LLaVA (future)        |
-| Database      | SQLite                       |
-| Deployment    | Docker, Gunicorn, Nginx      |
+| Layer         | Tools                     |
+|---------------|----------------------------|
+| Backend       | Flask                      |
+| Frontend      | HTML, CSS, Vanilla JS      |
+| Auth          | JWT (Flask-JWT-Extended)   |
+| LLMs          | OpenAI, Hugging Face       |
+| Vision Models | CLIP / LLaVA               |
+| DB            | SQLite                     |
+| Deployment    | Docker, Gunicorn, Nginx    |
 
 ---
 
-## 🤝 Contributions
+## 🤝 Contributing
 
-This is a beginner-friendly project designed for learning and experimentation. Contributions for improvements, bug fixes, model integration, and UI enhancements are welcome.
+1. Fork the repo
+2. Create a new branch:
+```bash
+git checkout -b feature/my-feature
+```
+3. Push and open a PR 🚀
 
 ---
 
 ## 📜 License
 
-This project is licensed under the MIT License. Use freely with proper attribution.
+MIT License - See [LICENSE](LICENSE)
 
 ---
+
