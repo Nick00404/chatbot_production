@@ -144,4 +144,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📬 Contact
 
-For questions or feedback, please open an issue in the repository or reach out via email at your.email@example.com.
+For questions or feedback, please open an issue in the repository or reach out via email at nick.ml.dev@gmail.com
